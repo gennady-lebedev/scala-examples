@@ -1,12 +1,11 @@
 package dev.rudiments.examples.streams
 
-import akka.{Done, NotUsed}
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Flow, Sink, Source}
+import akka.{Done, NotUsed}
 
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Future
 
 object Simple extends App {
   implicit val actorSystem: ActorSystem = ActorSystem()
@@ -24,9 +23,11 @@ object Simple extends App {
 
   val printer: Sink[Any, Future[Done]] = Sink.foreach(println)
 
-  Await.result(hundred.via(fizzbuzz).runWith(printer), Duration("1 second"))
-  Await.result(factorial.runWith(printer), Duration("1 second"))
+  hundred.via(fizzbuzz).to(printer).run()
+  //factorial.to(printer).run()
 
   val zipped = factorial.zipWith(Source(0 to 100))((f, i) => s"$i! = $f")
-  Await.result(zipped.runWith(printer), Duration("5 seconds"))
+  //zipped.to(printer).run()
+
+  hundred.via(fizzbuzz).takeWhile(_ != "49", true).to(printer).run()
 }
